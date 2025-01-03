@@ -5,64 +5,95 @@ const deleteButton = document.querySelector('#delete')
 const equalsButton = document.querySelector('.equals-button')
 const previousOperand = document.querySelector('.previous-operand')
 const currentOperand = document.querySelector('.current-operand')
+
 let chooseOperation = ''
 let numberIsEntered = false
+let rawNumber = ''
+let rawPreviousNumber = ''
 
 numberButtons.forEach((button) => {
     button.addEventListener('click', () => {
-        numberIsEntered = true
-        updateCurrentOperand(button.textContent)
+        numberIsEntered = true;
+        updateCurrentOperand(button.textContent);
     })
 })
 
 operationButtons.forEach((button) => {
     button.addEventListener('click', () => {
-        if(numberIsEntered){
-            if(chooseOperation){
-                calculateResult()
+        if (numberIsEntered) {
+            if (chooseOperation) {
+                calculateResult();
             }
-            chooseOperation = button.textContent
-            updatePreviousOperand()
+            chooseOperation = button.textContent;
+            updatePreviousOperand();
         }
     })
 })
 
-function updateCurrentOperand(number){
-    if(number === '.' && currentOperand.textContent.includes('.')) return
-    currentOperand.textContent += number
+function updateCurrentOperand(number) {
+    if (number === '.' && rawNumber.includes('.')) return
+    rawNumber += number
+    formatNumbers()
 }
 
-function updatePreviousOperand(){
-    if(currentOperand.textContent !== ''){
-    previousOperand.textContent = currentOperand.textContent + ' ' + chooseOperation
-    currentOperand.textContent = ''
+function formatNumbers() {
+    if (!rawNumber || isNaN(parseFloat(rawNumber))){
+        return
+    }
+
+    const formattedNumber = parseFloat(rawNumber).toLocaleString('en-US', {
+        maximumFractionDigits: 2,
+    })
+
+    currentOperand.textContent = formattedNumber
+}
+
+function updatePreviousOperand() {
+    if (rawNumber !== '') {
+        rawPreviousNumber = rawNumber
+        previousOperand.textContent = `${currentOperand.textContent} ${chooseOperation}`
+        clearCurrentOperand()
     }
 }
 
-function calculateResult(){
-    const currentNumber = parseFloat(currentOperand.textContent)
-    const previousNumber = parseFloat(previousOperand.textContent.split(' ')[0])
-    if(!isNaN(currentNumber) && !isNaN(previousNumber) && chooseOperation){
-        switch(chooseOperation){
+function clearCurrentOperand() {
+    rawNumber = ''
+    currentOperand.textContent = ''
+}
+
+function calculateResult() {
+    const currentNumber = parseFloat(rawNumber)
+    const previousNumber = parseFloat(rawPreviousNumber)
+    if (!isNaN(currentNumber) && !isNaN(previousNumber) && chooseOperation){
+        let result
+        switch (chooseOperation){
             case '+':
-                currentOperand.textContent = previousNumber + currentNumber
+                result = previousNumber + currentNumber
                 break
-            case '-': 
-                currentOperand.textContent = previousNumber - currentNumber
+            case '-':
+                result = previousNumber - currentNumber
                 break
-            case '*': 
-                currentOperand.textContent = previousNumber * currentNumber
+            case '*':
+                result = previousNumber * currentNumber
                 break
             case '÷':
-                currentOperand.textContent = previousNumber / currentNumber
+                result = previousNumber / currentNumber
                 break
+            default:
+                return
         }
+
+        rawNumber = result.toString()
+        formatNumbers()
         previousOperand.textContent = ''
+        rawPreviousNumber = ''
         chooseOperation = ''
     }
 }
 
 function clearCalculator(){
+    rawNumber = ''
+    rawPreviousNumber = ''
     currentOperand.textContent = ''
     previousOperand.textContent = ''
     chooseOperation = ''
@@ -70,7 +101,8 @@ function clearCalculator(){
 }
 
 function deleteNumber(){
-    currentOperand.textContent = currentOperand.textContent.slice(0, -1)
+    rawNumber = rawNumber.slice(0, -1)
+    formatNumbers()
 }
 
 allClearButton.addEventListener('click', clearCalculator)
